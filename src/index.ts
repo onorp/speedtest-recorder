@@ -1,5 +1,5 @@
 import { exec } from "child_process";
-import { Channel, ChannelType, Client, GatewayIntentBits, Guild } from "discord.js";
+import { Channel, ChannelType, Client, EmbedBuilder, GatewayIntentBits, Guild } from "discord.js";
 import { convert } from "./speedtest";
 import schedule from "node-schedule";
 import "dotenv/config";
@@ -21,12 +21,27 @@ const sendResult = (channel: Channel | undefined) => {
     
     exec("speedtest -s 48463", async (err, stdout, stderr) => {
         if (err) console.log(err);
+        console.log(stdout);
         const cleanedData = stdout.replaceAll(" ", "").split("\n").map(item => item.trim().replace('\r', ''));
         const convertedData = convert(cleanedData.splice(3));
         console.log("Result: ")
         console.log(JSON.stringify(convertedData));
         if (channel?.type === ChannelType.GuildText) {
-            await channel.send(String(convertedData.ResultURL));
+            const embeds = new EmbedBuilder()
+            .setTitle("Speedtest Result")
+            .setURL(String(convertedData.ResultURL))
+            .setDescription(convertedData.Server?.name || "null")
+            .setTimestamp()
+            .addFields(
+                { name: "Download", value: convertedData.Download?.speed || "null", inline: true },
+                { name: "Upload", value: convertedData.Upload?.speed || "null", inline: true },
+            ).addFields(
+                { name: "Download", value: convertedData.Download?.Ping.jitter || "null" },
+                { name: "Upload", value: convertedData.Upload?.Ping.jitter || "null", inline: true },
+            ).addFields(
+                { name: "Packet Loss", value: String(convertedData.PacketLoss) || "null" }
+            ).setImage("https://play-lh.googleusercontent.com/xKUdbWyGGv4lbYH5Fzrz-USBEKk84Aw43IPmnl9VVq4jewz4y8JrwOivPsAYCtTbDbdt");
+            await channel.send({ embeds: [embeds] });
         }
     });
 };
