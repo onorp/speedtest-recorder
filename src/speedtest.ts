@@ -35,10 +35,10 @@ interface SpeedTestResult {
 }
 
 const parseLatencyData = (value: string) => {
-    const [latency, jitterString, lowString, highString] = value.split(/[():]/);
-    const jitter = jitterString?.replace('jitter', '').trim() || null;
-    const low = lowString?.replace('low', '').trim() || null;
-    const high = highString?.replace('high', '').trim() || null;
+    const [latency, jitterTitle, jitterString, lowString, highString] = value.split(/[():]/);
+    const jitter = jitterString?.replace(',low', '').trim() || null;
+    const low = lowString?.replace(',high', '').trim() || null;
+    const high = highString || null;
     return {
         latency: latency?.trim() || '',
         jitter,
@@ -48,14 +48,16 @@ const parseLatencyData = (value: string) => {
 };
 
 export const convert = (data: string[]) => {
-    console.log("===== [Log] =====")
-    console.log(data);
-    console.log("=================")
-
     const jsonData: Partial<SpeedTestResult> = {};
 
     for (let i = 0; i < data.length; i++) {
-        const [key, value] = data[i].split(':');
+        const splitData = data[i].split(':');
+
+        const key = splitData[0];
+        let value = "";
+        for (let j = 1; j < splitData.length; j++) {
+            value += splitData[j] + (j == splitData.length - 1 ? "" : ":");
+        }
 
         if (!key || !value) continue;
 
@@ -69,7 +71,7 @@ export const convert = (data: string[]) => {
                 };
                 break;
             case 'ResultURL':
-                jsonData[key] = `https://${value}`;
+                jsonData[key] = `${value}`;
                 break;
             case 'Download':
             case 'Upload':

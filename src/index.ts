@@ -18,6 +18,7 @@ client.on("ready", async () => {
 
 const sendResult = (channel: Channel | undefined) => {
     console.log("Measuring...")
+    
     exec("speedtest -s 48463", async (err, stdout, stderr) => {
         if (err) console.log(err);
         const cleanedData = stdout.replaceAll(" ", "").split("\n").map(item => item.trim().replace('\r', ''));
